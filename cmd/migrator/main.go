@@ -28,6 +28,7 @@ type config struct {
 }
 
 func main() {
+	logging.Init()
 	logger := logging.GetLogger()
 
 	// Определение флагов командной строки
