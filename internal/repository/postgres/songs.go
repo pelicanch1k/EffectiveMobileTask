@@ -244,9 +244,23 @@ func (s SongsPostgres) UpdateSong(req dto.UpdateSongRequest) error {
 func (s SongsPostgres) DeleteSong(id int) error {
 	query := "DELETE FROM songs WHERE id = $1"
 
-	_, err := s.db.Exec(query, id)
-	return err
+	result, err := s.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return fmt.Errorf("песня с id %d не найдена", id)
+	}
+
+	return nil
 }
+
 
 func (s SongsPostgres) GetSongLyrics(req dto.GetSongLyricsRequest) ([]string, error) {
 	var lyrics string

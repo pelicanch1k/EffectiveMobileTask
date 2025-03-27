@@ -12,26 +12,6 @@ type pagination struct {
 	limit, offset int
 }
 
-func initPagination(c *gin.Context) (*pagination, error) {
-	limit, err := strconv.Atoi(c.GetHeader("limit"))
-	if err != nil {
-		if c.GetHeader("limit") != "" {
-			newErrorResponse(c, http.StatusBadRequest, "Invalid limit parameter")
-			return nil, err
-		}
-	}
-
-	offset, err := strconv.Atoi(c.GetHeader("offset"))
-	if err != nil {
-		if c.GetHeader("offset") != "" {
-			newErrorResponse(c, http.StatusBadRequest, "Invalid offset parameter")
-			return nil, err
-		}
-	}
-
-	return &pagination{limit: limit, offset: offset}, nil
-}
-
 // @Summary Get songs
 // @Tags songs
 // @Description Get a list of songs with optional filters and pagination
@@ -63,7 +43,7 @@ func (h *Handler) GetSongs(c *gin.Context) {
 	groupId, _ := strconv.Atoi(c.GetHeader("groupId"))
 	group := c.GetHeader("group")
 
-	pag, err := initPagination(c)
+	pag, err := h.initPagination(c)
 	if err != nil {
 		return
 	}
@@ -85,7 +65,7 @@ func (h *Handler) GetSongs(c *gin.Context) {
 
 	songs, err := h.services.GetSongs(resp)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		h.newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -104,17 +84,17 @@ func (h *Handler) GetSongs(c *gin.Context) {
 // @Failure 404 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
-// @Router /songs/{id} [get]
+// @Router /api/v1/song/{id} [get]
 func (h *Handler) GetSongById(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "Invalid Song ID")
+		h.newErrorResponse(c, http.StatusBadRequest, "Invalid Song ID")
 		return
 	}
 
 	song, err := h.services.GetSongById(id)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		h.newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -139,11 +119,11 @@ func (h *Handler) GetSongById(c *gin.Context) {
 func (h *Handler) GetSongLyrics(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "Invalid Song ID")
+		h.newErrorResponse(c, http.StatusBadRequest, "Invalid Song ID")
 		return
 	}
 
-	pag, err := initPagination(c)
+	pag, err := h.initPagination(c)
 	if err != nil {
 		return
 	}
@@ -156,7 +136,7 @@ func (h *Handler) GetSongLyrics(c *gin.Context) {
 
 	verses, err := h.services.GetSongLyrics(resp)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		h.newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -182,12 +162,12 @@ func (h *Handler) GetSongLyrics(c *gin.Context) {
 func (h *Handler) DeleteSong(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		newErrorResponse(c, http.StatusBadRequest, "Invalid ID")
+		h.newErrorResponse(c, http.StatusBadRequest, "Invalid ID")
 		return
 	}
 
 	if err = h.services.DeleteSong(id); err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		h.newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -212,12 +192,12 @@ func (h *Handler) UpdateSong(c *gin.Context) {
 	var song dto.UpdateSongRequest
 
 	if err := c.BindJSON(&song); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		h.newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := h.services.UpdateSong(song); err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		h.newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -247,7 +227,7 @@ func (h *Handler) AddSong(c *gin.Context) {
 
 	id, err := h.services.AddSong(song)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		h.newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -265,18 +245,18 @@ func (h *Handler) AddSong(c *gin.Context) {
 // @Failure 400 {object} errorResponse
 // @Failure 500 {object} errorResponse
 // @Failure default {object} errorResponse
-// @Router /songs/search [get]
+// @Router /api/v1/songs/search/{query} [get]
 func (h *Handler) SearchSongs(c *gin.Context) {
 	query := c.Query("query")
 
 	if query == "" {
-		newErrorResponse(c, http.StatusBadRequest, "Missing query parameter")
+		h.newErrorResponse(c, http.StatusBadRequest, "Missing query parameter")
 		return
 	}
 
 	songs, err := h.services.SearchSongs(query)
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		h.newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 

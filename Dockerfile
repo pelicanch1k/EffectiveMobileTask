@@ -4,14 +4,15 @@ FROM golang:1.23.4 AS builder
 # Устанавливаем рабочую директорию
 WORKDIR /app
 
-RUN go version
-ENV GOPATH=/
-
 # Копируем файлы проекта
 COPY . .
 
-# Собираем приложение
+# Устанавливаем зависимости
 RUN go mod download
-RUN go build -o main.go ./cmd/app/main.go
 
-CMD ["./main.go"]
+# Собираем приложение и мигратор
+RUN go build -o app ./cmd/app/main.go
+RUN go build -o migrator ./cmd/migrator/main.go
+
+# Команда по умолчанию для запуска приложения (будет переопределена в docker-compose.yml для мигратора)
+CMD ["./app"]

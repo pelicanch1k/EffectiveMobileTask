@@ -191,6 +191,43 @@ paths:
       summary: Delete a song
       tags:
       - songs
+    get:
+      consumes:
+      - application/json
+      description: Get a song by its ID
+      operationId: getSongById
+      parameters:
+      - description: Song ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Song'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+        default:
+          description: ""
+          schema:
+            $ref: '#/definitions/handler.errorResponse'
+      summary: Get song by ID
+      tags:
+      - songs
   /api/v1/song/{id}/lyrics:
     get:
       consumes:
@@ -310,45 +347,7 @@ paths:
       summary: Get songs
       tags:
       - songs
-  /songs/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get a song by its ID
-      operationId: getSongById
-      parameters:
-      - description: Song ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Song'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-        default:
-          description: ""
-          schema:
-            $ref: '#/definitions/handler.errorResponse'
-      summary: Get song by ID
-      tags:
-      - songs
-  /songs/search:
+  /api/v1/songs/search/{query}:
     get:
       consumes:
       - application/json

@@ -19,7 +19,9 @@ func NewRouter(h *handler.Handler) *gin.Engine {
 	songs := router.Group("/api/v1")
 	{
 		songs.GET("/songs", h.GetSongs)
+		songs.GET("/song/:id", h.GetSongById)
 		songs.GET("/song/:id/lyrics", h.GetSongLyrics)
+		songs.GET("/songs/search/:query", h.SearchSongs)
 
 		songs.DELETE("/song/:id", h.DeleteSong)
 

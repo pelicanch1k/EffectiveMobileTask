@@ -1,35 +1,59 @@
-version: '3.10'
+version: '3.8'
 
 services:
+  # Сервис базы данных PostgreSQL
   postgres:
     image: postgres:latest
     restart: always
     environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: root
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5433:5433"
+      - "${DB_PORT}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
 
+  # Сервис для применения миграций
   migrator:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
       - postgres
-    command: go run cmd/migrator/main.go
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+    command: ["./migrator"]  # Запуск мигратора, если он скомпилирован, или можно использовать go run
+    networks:
+      - app-network
 
+  # Основное приложение
   app:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
       - postgres
-      - migrator
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${DB_PORT}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
     ports:
-      - "80:80"
+      - "${APP_PORT}:${APP_PORT}"
+    networks:
+      - app-network
 
 volumes:
   pgdata:
+
+networks:
+  app-network:
+    driver: bridge

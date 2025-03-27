@@ -1,31 +1,44 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/pelicanch1k/EffectiveMobileTestTask/pkg/logging"
 	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
-type errorResponse struct {
-	Message string `json:"message"`
+func (h *Handler) newErrorResponse(c *gin.Context, statusCode int, message string) {
+	h.logger.Error(message)
+	
+	c.JSON(statusCode, gin.H{
+		"error": message,
+	})
 }
 
-type statusResponse struct {
-	Status string `json:"status"`
+func (h *Handler) newSuccessResponse(c *gin.Context, statusCode int, data interface{}) {
+	h.logger.Info(data)
+
+	c.JSON(statusCode, gin.H{
+		"data": data,
+	})
 }
 
-func newErrorResponse(c *gin.Context, statusCode int, message string) {
-	logging.GetLogger().Error(message)
-	if errorHandler(c, message) {
-		c.AbortWithStatusJSON(statusCode, errorResponse{message})
+func (h *Handler) initPagination(c *gin.Context) (*pagination, error) {
+	limit, err := strconv.Atoi(c.GetHeader("limit"))
+	if err != nil {
+		if c.GetHeader("limit") != "" {
+			h.newErrorResponse(c, http.StatusBadRequest, "Invalid limit parameter")
+			return nil, err
+		}
 	}
-}
 
-func errorHandler(c *gin.Context, message string) bool {
-	if message == "pq: duplicate key value violates unique constraint \"users_username_key\"" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, errorResponse{"username is already taken"})
-		return false
+	offset, err := strconv.Atoi(c.GetHeader("offset"))
+	if err != nil {
+		if c.GetHeader("offset") != "" {
+			h.newErrorResponse(c, http.StatusBadRequest, "Invalid offset parameter")
+			return nil, err
+		}
 	}
 
-	return true
+	return &pagination{limit: limit, offset: offset}, nil
 }
